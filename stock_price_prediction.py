@@ -31,7 +31,7 @@ df = df[['Adj. Close', 'HL', 'OC', 'Adj. Volume']]
 
 forecast_col = 'Adj. Close'
 df.fillna(value=-99999, inplace=True)
-forecast_out = int(math.ceil(0.02*len(df)))
+forecast_out = int(math.ceil(0.1*len(df)))
 
 #print(forecast_out)
 df['label'] = df[forecast_col].shift(-forecast_out)
@@ -58,7 +58,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 # print(X_test)
 # print(y_train)
 # print(y_test)
-#clf = svm.SVR()
+# clf = svm.SVR()
 clf = LinearRegression(n_jobs=-1)
 clf.fit(X_train, y_train)
 
