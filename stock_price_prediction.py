@@ -7,9 +7,10 @@ from sklearn.model_selection import train_test_split
 import numpy as np
 import datetime
 import matplotlib.pyplot as plt
-from matplotlib import style
+#from matplotlib import style
+import pickle
 
-style.use('ggplot')
+#style.use('ggplot')
 
 df = quandl.get('WIKI/GOOGL')
 
@@ -30,7 +31,7 @@ df = df[['Adj. Close', 'HL', 'OC', 'Adj. Volume']]
 
 forecast_col = 'Adj. Close'
 df.fillna(value=-99999, inplace=True)
-forecast_out = int(math.ceil(0.01*len(df)))
+forecast_out = int(math.ceil(0.02*len(df)))
 
 #print(forecast_out)
 df['label'] = df[forecast_col].shift(-forecast_out)
@@ -60,14 +61,39 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 #clf = svm.SVR()
 clf = LinearRegression(n_jobs=-1)
 clf.fit(X_train, y_train)
+
+# saving the model to pickle
+with open('saved_model.pickle', 'wb') as file:
+	pickle.dump(clf, file)
+
+# loading pickle
+pickle_in = open('saved_model.pickle', 'rb')
+clf = pickle.load(pickle_in)
+
 confidence = clf.score(X_test, y_test)
-print(confidence)
+#print(confidence)
 
 forecast_set = clf.predict(X_lately)
+df['Forecast'] = np.nan
 # print(df['label'])
 # print(forecast_set)
 
 #df['Forecast'] = np.nan
+last_date = df.iloc[-1].name
+last_unix = last_date.timestamp()
+next_unix = last_unix + 86400
+#print(df)
+for i in forecast_set:
+	next_date = datetime.datetime.fromtimestamp(next_unix)
+	next_unix += 86400
+	df.loc[next_date] = [np.nan for _ in range(len(df.columns)-1)]+[i]
+#print(df)
 
-
+# graph plotting
+df['Adj. Close'].plot()
+df['Forecast'].plot()
+plt.legend(loc=2)
+plt.xlabel('Date')
+plt.ylabel('Price')
+plt.show()
 
